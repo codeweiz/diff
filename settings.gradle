@@ -1,10 +1,3 @@
 rootProject.name = 'diff'
-
-dependencyResolutionManagement {
-    repositories {
-        maven {
-            url 'http://192.168.124.23:8081/nexus/repository/maven-public/'
-            allowInsecureProtocol = true
-        }
-    }
-}
+include ':common'
+include ':mgmt'
