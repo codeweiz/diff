@@ -8,12 +8,14 @@ import cn.microboat.common.rest.RestPageResultResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 用户 API 接口
  */
-@RestController("/user")
+@RestController
+@RequestMapping("/user")
 public class UserController {
 
     @Autowired
@@ -23,7 +25,7 @@ public class UserController {
      * 多条件分页排序查询用户列表
      */
     @PostMapping("/page")
-    public RestPageResultResponse<User> page(@RequestBody UserSearchForm searchForm, PageForm pageForm) {
+    public RestPageResultResponse<User> pageUser(@RequestBody UserSearchForm searchForm, PageForm pageForm) {
         return RestPageResultResponse.of(userService.findAll(searchForm, pageForm.toPageable(), pageForm.toSort()));
     }
 
