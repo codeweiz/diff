@@ -39,7 +39,7 @@ public class PageForm {
      * 排序，格式: 属性名,(asc|desc);属性名,(asc|desc)
      * 例如: "name,asc;createTime,desc"
      */
-    private String sort;
+    private String sort = "";
 
     /**
      * 获取Spring Data的Pageable对象
@@ -62,11 +62,11 @@ public class PageForm {
     /**
      * 获取Spring Data的Sort对象
      *
-     * @return Sort对象，如果没有排序条件则返回null
+     * @return Sort对象，如果没有排序条件则返回不排序
      */
     public Sort toSort() {
         if (!StringUtils.hasText(sort)) {
-            return null;
+            return Sort.unsorted();
         }
 
         List<Sort.Order> orders = new ArrayList<>();
@@ -96,7 +96,7 @@ public class PageForm {
         }
 
         if (orders.isEmpty()) {
-            return null;
+            return Sort.unsorted();
         }
 
         return Sort.by(orders);
