@@ -2,14 +2,9 @@ rootProject.name = 'diff'
 
 dependencyResolutionManagement {
     repositories {
-        // 阿里云仓库
-        maven { url 'https://maven.aliyun.com/repository/public/' }
-        maven { url 'https://maven.aliyun.com/repository/central/' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-
-        // 保留原有仓库
-        mavenCentral()
-        google()
+        maven {
+            url 'http://192.168.124.23:8081/nexus/repository/maven-public/'
+            allowInsecureProtocol = true
+        }
     }
 }
