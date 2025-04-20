@@ -2,10 +2,41 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'maven-publish'
 }
 
-group = 'cn.microboat'
-version = '0.0.1-SNAPSHOT'
+// 导入需要的类
+import java.text.SimpleDateFormat
+
+// 定义生成版本号的函数
+def generateVersion() {
+    def majorVersion = project.findProperty('majorVersion') ?: '1'
+    def minorVersion = project.findProperty('minorVersion') ?: '0'
+    def isSnapshotBuild = project.findProperty('snapshot')?.toBoolean() ?: false
+
+    def dateFormat = new SimpleDateFormat('yyyyMMddHHmmss')
+    dateFormat.setTimeZone(TimeZone.getTimeZone('UTC'))
+    def timestamp = dateFormat.format(new Date())
+
+    def finalVersion = isSnapshotBuild ? "${majorVersion}.${minorVersion}.${timestamp}-SNAPSHOT" : "${majorVersion}.${minorVersion}.${timestamp}"
+    println('版本号：' + finalVersion)
+    return finalVersion
+}
+
+// 为所有项目设置共同配置
+allprojects {
+    group = project.findProperty('group') ?: 'cn.microboat'
+    version = generateVersion()
+
+    // 为所有项目(包括根项目)设置仓库
+    repositories {
+        maven {
+            url 'http://192.168.124.23:8081/nexus/repository/maven-public/'
+            allowInsecureProtocol = true
+        }
+        mavenCentral()
+    }
+}
 
 java {
     toolchain {
@@ -19,20 +50,11 @@ configurations {
     }
 }
 
-// 应用发布配置
-apply from: 'publish.gradle'
-
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
-
-    repositories {
-        maven {
-            url 'http://192.168.124.23:8081/nexus/repository/maven-public/'
-            allowInsecureProtocol = true
-        }
-    }
+    apply plugin: 'maven-publish'
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -42,6 +64,45 @@ subprojects {
         annotationProcessor 'org.projectlombok:lombok'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    // 为每个子项目配置发布
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+
+                versionMapping {
+                    usage('java-api') {
+                        fromResolutionOf('runtimeClasspath')
+                    }
+                    usage('java-runtime') {
+                        fromResolutionResult()
+                    }
+                }
+
+                pom {
+                    name = project.name
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name = "nexus"
+                def releasesRepoUrl = "http://192.168.124.23:8081/nexus/repository/maven-releases/"
+                def snapshotsRepoUrl = "http://192.168.124.23:8081/nexus/repository/maven-snapshots/"
+                url = project.version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+                // HTTP 下
+                allowInsecureProtocol = true
+
+                credentials {
+                    username = findProperty("nexusUsername") ?: System.getenv("NEXUS_USERNAME")
+                    password = findProperty("nexusPassword") ?: System.getenv("NEXUS_PASSWORD")
+                }
+            }
+        }
     }
 }
 
