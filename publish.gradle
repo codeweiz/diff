@@ -1,0 +1,80 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+// 配置发布到 Maven Central 的设置
+ext {
+    // 从 gradle.properties 或环境变量读取这些值
+    ossrhUsername = project.hasProperty('ossrhUsername') ? project.ossrhUsername : System.getenv('OSSRH_USERNAME')
+    ossrhPassword = project.hasProperty('ossrhPassword') ? project.ossrhPassword : System.getenv('OSSRH_PASSWORD')
+    signingKey = project.hasProperty('signingKey') ? project.signingKey : System.getenv('SIGNING_KEY')
+    signingPassword = project.hasProperty('signingPassword') ? project.signingPassword : System.getenv('SIGNING_PASSWORD')
+}
+
+// 创建源码和 javadoc JAR 的任务
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = 'javadoc'
+}
+
+// 配置发布
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = project.name
+                description = project.description ?: 'A library for ...'
+                url = 'https://github.com/your/repo'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'your-id'
+                        name = 'Your Name'
+                        email = 'your.email@example.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/your/repo.git'
+                    developerConnection = 'scm:git:ssh://github.com/your/repo.git'
+                    url = 'https://github.com/your/repo'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // Sonatype OSSRH 仓库
+            def releasesRepoUrl = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}
+
+// 配置签名
+signing {
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenJava
+}
