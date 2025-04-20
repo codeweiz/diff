@@ -1,0 +1,30 @@
+package cn.microboat.diff.ctrl;
+
+import cn.microboat.diff.entity.User;
+import cn.microboat.diff.form.PageForm;
+import cn.microboat.diff.form.UserSearchForm;
+import cn.microboat.diff.service.UserService;
+import cn.microboat.diff.vo.RestPageResultResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 用户 API 接口
+ */
+@RestController("/user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 多条件分页排序查询用户列表
+     */
+    @PostMapping("/page")
+    public RestPageResultResponse<User> page(@RequestBody UserSearchForm searchForm, PageForm pageForm) {
+        return RestPageResultResponse.of(userService.findAll(searchForm, pageForm.toPageable(), pageForm.toSort()));
+    }
+
+}
